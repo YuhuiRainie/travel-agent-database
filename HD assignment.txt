@@ -1,0 +1,266 @@
+/*High Distinction,Autumn 2018,Yuhui Liu,12842201@student.uts.edu.au
+--Student ID : 12842201 Name: Yuhui Liu
+--This database is for a Travel Agent website. This website offers customers group traveling trips.
+--A customer can book multiple trips. Reservation is what the customer orders for his or her trip
+--An employee can manage multiple reservations. Employee table includes boss. It is a self-reference table.
+--Route is what the company offers to customer for group travel. It is fixed. 
+--Schedule is a detailed travel arragement. It arrages the hotel, restaurant, sigtseeings for customers. 
+--https://www.gadventures.com.au/
+--https://www.mtatravel.com.au/groups
+*/
+
+
+drop table schedule;
+drop table restaurant;
+drop table sightseeing;
+drop table hotel;
+drop table reservation;
+drop table route;
+drop table employee;
+drop table customer;
+drop table country;
+
+CREATE TABLE customer
+(
+   customer_id integer not null, 
+   customer_name text not null, 
+   customer_password text not null, 
+   email text unique not null, 
+   birth integer, 
+   gender character(1) not null, 
+   contact_num integer unique not null, 
+   adress text, 
+   PRIMARY KEY (customer_id),
+   constraint birth check (birth >=1950 and birth<=2018),
+   constraint gender check(gender in ('M','F')), 
+    --¡®M¡¯means males and 'F' means female
+   constraint email check(email like '%%@%%')
+
+
+);
+
+CREATE TABLE employee
+(
+   employee_id integer, 
+   name text not null, 
+   gender character(1), 
+   adress text, 
+   contact_num integer not null, 
+   boss_id integer, 
+   PRIMARY KEY (employee_id),
+   constraint gender check(gender in ('M','F')), 
+    --¡®M¡¯means males and 'F' means female
+    FOREIGN KEY (boss_id) REFERENCES employee(employee_id) 
+    
+   
+);
+
+
+
+
+
+
+CREATE TABLE country
+(
+   country_id integer unique not null, 
+   country_name text unique not null, 
+ 
+   PRIMARY KEY (country_id)
+) ;
+CREATE TABLE sightseeing
+
+(
+  
+   sightseeing_id integer NOT NULL,
+  
+   sightseeing_name text NOT NULL,
+  
+   country_id integer,
+
+  location text NOT NULL,
+ 
+  CONSTRAINT sightseeing_pkey PRIMARY KEY (sightseeing_id),
+ 
+  CONSTRAINT sightseeing_country_id_fkey FOREIGN KEY (country_id)
+      REFERENCES country (country_id) ON UPDATE CASCADE ON DELETE CASCADE
+
+);
+
+
+CREATE TABLE hotel
+(
+   hotel_id integer unique not null, 
+   country_id integer, 
+   hotel_name text not null, 
+   hotel_location text unique not null, 
+   PRIMARY KEY (hotel_id), 
+   FOREIGN KEY (country_id) REFERENCES country (country_id) ON UPDATE CASCADE ON DELETE CASCADE
+) ;
+
+CREATE TABLE restaurant
+(
+   restaurant_id integer unique not null, 
+   restaurant_name text not null, 
+   country_id integer, 
+   resturant_location text unique not null, 
+   PRIMARY KEY (restaurant_id), 
+   FOREIGN KEY (country_id) REFERENCES country (country_id) ON UPDATE CASCADE ON DELETE CASCADE
+);
+
+CREATE TABLE route
+(
+  route_id integer NOT NULL,
+  route_type text NOT NULL,
+  country_id integer NOT NULL,
+  started_place text NOT NULL,
+  destination text NOT NULL,
+  vehicle_type text NOT NULL,
+  days integer NOT NULL,
+  CONSTRAINT route_pkey PRIMARY KEY (route_id),
+  CONSTRAINT route_country_id_fkey FOREIGN KEY (country_id)
+      REFERENCES country (country_id)
+      ON UPDATE CASCADE ON DELETE CASCADE,
+  CONSTRAINT days CHECK (days > 0),
+  CONSTRAINT route_type CHECK (route_type in ('domestic', 'international')),
+  CONSTRAINT vehicle_type CHECK (vehicle_type in('train', 'plan', 'bus', 'cruise'))
+);
+CREATE TABLE schedule
+
+(
+
+  route_id integer NOT NULL,
+
+  schedule_id integer NOT NULL,
+
+  sightseeing_id integer,
+
+  resturant_id integer,
+
+  hotel_id integer,
+
+  CONSTRAINT schedule_pkey PRIMARY KEY (route_id, schedule_id),
+
+  CONSTRAINT schedule_hotel_id_fkey FOREIGN KEY (hotel_id)
+      REFERENCES hotel (hotel_id) ON UPDATE CASCADE ON DELETE CASCADE,
+
+  CONSTRAINT schedule_resturant_id_fkey FOREIGN KEY (resturant_id)
+      REFERENCES restaurant (restaurant_id) ON UPDATE CASCADE ON DELETE CASCADE,
+
+  CONSTRAINT schedule_route_id_fkey FOREIGN KEY (route_id)
+      REFERENCES route (route_id)  ON UPDATE CASCADE ON DELETE CASCADE,
+
+  CONSTRAINT schedule_sightseeing_id_fkey FOREIGN KEY (sightseeing_id)
+      REFERENCES sightseeing (sightseeing_id) ON UPDATE CASCADE ON DELETE CASCADE
+
+);
+
+CREATE TABLE reservation
+(
+   reservation_id integer not null, 
+   customer_id integer not null, 
+    
+   employee_id integer not null, 
+   route_id integer not null, 
+  
+   number_of_people integer not null, 
+   date_of_reservation text, 
+   total_money integer, 
+   payment_method text not null,
+
+  
+   
+   PRIMARY KEY (reservation_id,customer_id),
+ 
+   FOREIGN KEY (employee_id) REFERENCES employee (employee_id) ON UPDATE CASCADE ON DELETE CASCADE, 
+   FOREIGN KEY (customer_id) REFERENCES customer (customer_id) ON UPDATE CASCADE ON DELETE CASCADE, 
+   FOREIGN KEY (route_id) REFERENCES route (route_id) ON UPDATE CASCADE ON DELETE CASCADE, 
+  CONSTRAINT payment_method check (payment_method in('credit card','cash')),
+   constraint total_money check(total_money>0),
+   constraint number_of_people check(number_of_people>=1)
+) ;
+
+
+
+
+insert into country values('1','Australia');
+insert into country values('2','China');
+insert into country values('3','France');
+insert into country values('4','Germany');
+insert into country values('5','the U.S.A');
+
+
+insert into customer values('1','Alice','123456','Alice@gmail.com','1993','F','0410999666','Sydeny');
+insert into customer values('2','Eric','555666','Eric@gmail.com','1973','M','0410888666','Sydeny');
+insert into customer values('3','Baron','999456','Baron@gmail.com','1993','M','0410988776','Sydeny');
+insert into customer values('4','Rainie','042055','Rainie@gmail.com','1994','F','0410236556','Sydeny');
+insert into customer values('5','Yuhui Liu','995522','Yuhui@qq.com','1994','F','0410772266','Sydeny');
+
+insert into employee values ('1','Mark','M','wolli creek','0420556688');
+insert into employee values ('2','Howie','M','66 keats Avenue,Rockdale','0420445566','1');
+insert into employee values ('3','Mike','M','99 Bay st, Burwood','0450661122','1');
+insert into employee values ('4','Jane','F','88 pitt st,wolli creek','0459886677','1');
+insert into employee values ('5','Amy','F','77 lister Avenue, Ultimo','0410945687','1');
+
+insert into hotel values ('1','1','Hilton Cairns','34 Esplanade, Cairns City,QLD');
+insert into hotel values ('2','1','Hotel Windsor','111 spring st,Melbourne VIC');
+insert into hotel values ('3','2','Shange-Ri La','34 Xindao st,Shanghai');
+insert into hotel values ('4','2','Beijing Hotel','100 Tiananmen st,Beijing');
+insert into hotel values ('5','3','Pullman','1 Rue de Lobourne,75012 Paris');
+insert into hotel values ('6','3','ibis','1 Rue du Capitaine Maignan,Rennes');
+insert into hotel values ('7','4','SANA','33/34 Nurnberger st,Berlin');
+insert into hotel values ('8','4','ibis','45 Faulenstrabe st, Bremen');
+insert into hotel values ('9','5','Hilton','34 pitt st, Los Angeles');
+insert into hotel values ('10','5','Pullman','111 summer st,Washington');
+
+insert into sightseeing values ('1','The Great Reef','1','Carins,QSL');
+insert into sightseeing values ('2','Sydney Musem','1','Sydney, NSW');
+insert into sightseeing values ('3','Tiananmen Square','2','Beijing');
+insert into sightseeing values ('4','Shanghai Park','2','Shanghai');
+insert into sightseeing values ('5','Eiffel Tower','3','Pairs');
+insert into sightseeing values ('6','Rennes Beach','3','Rennes');
+insert into sightseeing values ('7','Berlin Square','4','Berlin');
+insert into sightseeing values ('8','Bremen forest','4','Bremen');
+insert into sightseeing values ('9','Los Angeles Mountain','5','Los Angeles');
+insert into sightseeing values ('10','Washington Musem','5','Washington');
+
+insert into restaurant values ('1','Reef restaurant','1','Carins,QSL');
+insert into restaurant values ('2','Sunshine restaurant','1','Sydney, NSW');
+insert into restaurant values ('3','Beijing restaurant','2','Beijing');
+insert into restaurant values ('4','Waipojia restaurant','2','Shanghai');
+insert into restaurant values ('5','Romance restaurant','3','Pairs');
+insert into restaurant values ('6','Old Memory','3','Rennes');
+insert into restaurant values ('7','Red restaurant','4','Berlin');
+insert into restaurant values ('8','Happy restaurant','4','Bremen');
+insert into restaurant values ('9','Los Angeles restaurant','5','Los Angeles');
+insert into restaurant values ('10','Big Burger','5','Washington');
+
+
+insert into route values ('1','domestic','1','Sydney','Carins,QSL','cruise','5');
+insert into route values ('2','domestic','1','Sydney','Sydney','train','1');
+insert into route values ('3','international','2','Sydney','Beijing','plan','7');
+insert into route values ('4','international','2','Sydney','Shanghai','plan','7');
+insert into route values ('5','international','3','Sydney','Paris','plan','8');
+insert into route values ('6','international','3','Sydney','Rennes','plan','8');
+insert into route values ('7','international','4','Sydney','Berlin','plan','8');
+insert into route values ('8','international','4','Sydney','Bremen','plan','8');
+insert into route values ('9','international','5','Sydney','Los Angesles','plan','10');
+insert into route values ('10','international','5','Sydney','Washigton','plan','10');
+
+insert into reservation values ('1','1','2','1','1','09/08/2018','800','cash');
+insert into reservation values ('2','2','3','2','2','15/05/2018','200','credit card');
+insert into reservation values ('3','3','4','3','2','09/01/2018','3500','cash');
+insert into reservation values ('4','4','5','4','1','19/05/2017','1700','credit card');
+insert into reservation values ('5','5','5','10','2','09/04/2018','5000','cash');
+
+
+
+insert into schedule values ('1','1','1','1','1');
+insert into schedule values ('2','2','2','2','2');
+insert into schedule values ('3','3','3','3','3');
+insert into schedule values ('4','4','4','4','4');
+insert into schedule values ('5','5','5','5','5');
+insert into schedule values ('6','6','6','6','6');
+insert into schedule values ('7','7','7','7','7');
+insert into schedule values ('8','8','8','8','8');
+insert into schedule values ('9','9','9','9','9');
+insert into schedule values ('10','10','10','10','10');
